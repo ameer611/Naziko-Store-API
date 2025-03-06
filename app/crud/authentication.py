@@ -1,6 +1,8 @@
 from datetime import datetime
 
 from fastapi import HTTPException
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import Session
 
 from app.common.code_generator import generate_code
@@ -24,14 +26,13 @@ def create_user(db: Session, user_data: UserCreate):
     return db_user
 
 
-def get_user_by_phone(db: Session, phone_number: str):
-    user = db.query(User).filter(User.phone_number == phone_number).first()
-    if not user:
-        return None
-    return user
+async def get_user_by_phone(db: AsyncSession, phone_number: str):
+    result = await db.execute(select(User).filter(User.phone_number == phone_number))
+    return result.scalars().first()
 
-def get_user_tg_id(db: Session, tg_id: str):
-    user = db.query(User).filter(User.tg_id == tg_id).first()
+async def get_user_tg_id(db: AsyncSession, tg_id: str):
+    user = await db.execute(select(User).filter(User.tg_id == tg_id))
+    user = user.scalars().first()
     if not user:
         return None
     return user
@@ -39,7 +40,7 @@ def get_user_tg_id(db: Session, tg_id: str):
 def get_verification_code(db: Session, user):
     return db.query(VerificationCode).filter(VerificationCode.user_id == user.id).first()
 
-def create_verification_code(db: Session, phone_number: str):
+async def create_verification_code(db: Session, phone_number: str):
     user = get_user_by_phone(db, phone_number)
     if not user:
         return None
@@ -94,10 +95,8 @@ def change_password(db: Session, user, new_password: str):
     return {"status": "success", "message": "Password changed successfully"}
 
 
-def authenticate_user(phone_number, password, db):
-    user = get_user_by_phone(db, phone_number)
-    if not user:
-        return None
-    if not verify_password(password, user.password_hash):
+async def authenticate_user(username: str, password: str, db: AsyncSession):
+    user = await get_user_by_phone(db, username)
+    if not user or not verify_password(password, user.password_hash):
         return None
     return user

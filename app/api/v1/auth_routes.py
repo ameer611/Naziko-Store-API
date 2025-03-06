@@ -26,7 +26,7 @@ async def register(user: UserCreate, db: Session = Depends(get_db)):
     :param db: Session
     :return: UserResponse schema
     """
-    existing_user = get_user_by_phone(db, user.phone_number)
+    existing_user = await get_user_by_phone(db, user.phone_number)
     if existing_user:
         raise HTTPException(status_code=400, detail="Phone number already registered")
     if get_user_tg_id(db, user.tg_id):
@@ -73,7 +73,8 @@ async def verify_code(data: VerificationSentCode, db: Session = Depends(get_db))
 @router.post("/login", response_model=dict, status_code=200)
 async def login_for_access_token(form_data: Annotated[OAuth2PasswordRequestForm, Depends()],
                                  db: Session = Depends(get_db)):
-    user = authenticate_user(form_data.username, form_data.password, db)
+    user = await authenticate_user(form_data.username, form_data.password, db)
+
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                             detail='Could not validate user.')

@@ -36,3 +36,8 @@ def update_percentage_on_db(id, db, percentage_update):
     db.commit()
 
     return {"message": "Percentage updated successfully."}
+
+def get_percentage(db):
+    """ Get a last percentage """
+    percentage = db.query(Percentage).order_by(Percentage.created_at.desc()).first()
+    return percentage

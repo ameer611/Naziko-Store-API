@@ -68,3 +68,7 @@ def delete_customer_from_db(db, customer):
     db.delete(customer)
     db.commit()
     return {"message": "Customer deleted successfully"}
+
+def get_user_by_id(db, user_id):
+    """Get a user by ID from the database."""
+    return db.query(User).filter(User.id==user_id).first()

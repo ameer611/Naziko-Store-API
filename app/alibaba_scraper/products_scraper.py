@@ -1,15 +1,18 @@
+from pprint import pprint
+
 from dotenv import load_dotenv
 import os
 from time import sleep
 
 from fastapi import HTTPException
 from selenium.webdriver import Keys, ActionChains
+from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from app.service.telegram import send_photo_and_get_link, get_file_link
+from app.service.telegram import get_file_link
 
 load_dotenv()
 
@@ -185,7 +188,11 @@ def get_product_by_link_from_website(product_link):
                 description_attribute_value = description_attribute_items[j].find_element(By.CSS_SELECTOR,
                                                                                           "div.right").text
                 if description_attribute_key == "Single gross weight:":
-                    descriptions['weight'] = float(description_attribute_value.replace("kg", ""))
+                    try:
+                        descriptions['weight'] = float(description_attribute_value.replace("kg", "").strip())
+                    except ValueError:
+                        descriptions['weight'] = 0.0
+
                 description = {description_attribute_key: description_attribute_value}
                 descriptions[description_attribute_titles[i].text].update(description)
 
@@ -219,7 +226,6 @@ def get_product_variants(product_link):
 
         for variant in variants:
             variant_name = variant.find_element(By.TAG_NAME, 'span').text
-            print(variant_name.split("("))
             if variant_name.split("(")[1].startswith("1)"):
                 continue
             variants_elements = []
@@ -321,7 +327,7 @@ def search_product_by_image_from_website(image_path):
             EC.presence_of_element_located((By.TAG_NAME, 'body'))
         )
         body = driver.find_element(By.TAG_NAME, "body")
-        for _ in range(20):
+        for _ in range(25):
             body.send_keys(Keys.PAGE_DOWN)
             sleep(0.5)
 
@@ -359,18 +365,6 @@ def search_product_by_image_from_website(image_path):
     return products
 
 
-def send_photo_and_get_link_by_telegram(image_path):
-    if not os.path.exists(image_path):
-        raise FileNotFoundError("Image not found.")
-    file_id = send_photo_and_get_link(image_path)
-    if not file_id:
-        raise Exception("Error sending photo.")
-    file_link = get_file_link(file_id)
-    if not file_link:
-        raise Exception("Error getting file link.")
-    return file_link
-
-
 def delete_file_from_server(file_path):
     if os.path.exists(file_path):
         os.remove(file_path)
@@ -379,10 +373,15 @@ def delete_file_from_server(file_path):
 
 
 def get_product_comments(product_link):
-    """  """
+    """ Get product reviews from the website """
     # Driver settings
     options = webdriver.ChromeOptions()
     options.add_argument("--headless")
+    # options.add_argument("--disable-gpu")  # MacOS yoki Linux'da kerak bo‘lishi mumkin
+    # options.add_argument("--no-sandbox")  # Docker yoki root bo‘lsa ishlaydi
+    # options.add_argument("--disable-dev-shm-usage")  # RAM optimizatsiyasi uchun
+    #
+    # service = Service(os.getenv("CHROMEDRIVER_PATH"))
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -453,14 +452,16 @@ def get_product_comments(product_link):
                 if j > 2:
                     break
                 name_and_date = reviews[j].find_elements(By.CSS_SELECTOR, 'div.avatar-item')
-                comment_parent = reviews[j].find_element(By.CSS_SELECTOR, 'div[class="review-item up"]')
-                comment = comment_parent.find_elements(By.CSS_SELECTOR, 'div.review-content')
-                print(comment[0].text)
-                sleep(0.5)
+                comment_grandparent = reviews[j].find_element(By.CSS_SELECTOR, 'div.review-item')
+                WebDriverWait(driver, 10).until(
+                    EC.presence_of_element_located((By.CSS_SELECTOR, "div.review-info"))
+                )
+                comment = comment_grandparent.find_element(By.CSS_SELECTOR, 'div.review-info')
+
                 comments[stars[i]].append({
                     "name": name_and_date[0].text,
                     "date": name_and_date[1].text,
-                    "comment": comment[0].text
+                    "comment": comment.text
                 })
             to_remove_filter.click()
     except Exception as e:

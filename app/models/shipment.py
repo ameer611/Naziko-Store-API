@@ -8,5 +8,6 @@ class ShipmentType(Base):
 
     id = Column(Integer, primary_key=True)
     title = Column(String(200), unique=True)
-    description = Column(String(255))
-    cost_per_kg = Column(Float)
+    description = Column(String)
+    days = Column(Integer, nullable=False)
+    cost_per_kg = Column(Float, nullable=False)
