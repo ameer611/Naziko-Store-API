@@ -2,21 +2,32 @@ import os
 import requests
 
 
-def send_code_via_bot(id, code):
-    url = f"https://api.telegram.org/bot{os.getenv("TELEGRAM_BOT_TOKEN")}/sendMessage"
+async def send_code_via_bot(tg_id: str, code: int) -> bool:
+    """
+    Send verification code to user via telegram bot
 
-    data = {
-        "chat_id": id,
-        "text": f"Your verification code is: ``` {code} ```"
-    }
-    response = requests.post(url, data=data)
-    result = response.json()
+    :param tg_id: User's Telegram ID
+    :param code: Verification code to send
+    :return: True if successful, False otherwise
+    """
+    try:
+        url = f"https://api.telegram.org/bot{os.getenv("TELEGRAM_BOT_TOKEN")}/sendMessage"
 
-    if response.status_code == 200:
-        return result
-    else:
-        print(f"Error: {response.text}")
-        return None
+        data = {
+            "chat_id": tg_id,
+            "text": f"Your verification code is: ``` {code} ```"
+        }
+        response = requests.post(url, data=data)
+        result = response.json()
+
+        if response.status_code == 200:
+            return result
+        else:
+            print(f"Error: {response.text}")
+            return None
+    except Exception as e:
+        print(f"Error sending code via telegram: {e}")
+        return False
 
 def get_file_link(file_id):
     url = f"https://api.telegram.org/bot{os.getenv('TELEGRAM_BOT_TOKEN')}/getFile?file_id={file_id}"

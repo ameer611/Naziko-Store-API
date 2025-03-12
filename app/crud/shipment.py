@@ -1,30 +1,36 @@
 from app.models import ShipmentType
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
 
 
-def create_shipment_type_on_db(db, shipment):
-    existing_shipment = db.query(ShipmentType).filter(ShipmentType.title == shipment.title).first()
+async def create_shipment_type_on_db(db: AsyncSession, shipment):
+    existing_shipment = await db.execute(select(ShipmentType).filter(ShipmentType.title == shipment.title))
+    existing_shipment = existing_shipment.scalars().first()
     if existing_shipment:
         return None
     shipment_db = ShipmentType(**shipment.dict())
     db.add(shipment_db)
-    db.commit()
-    db.refresh(shipment_db)
+    await db.commit()
+    await db.refresh(shipment_db)
     return shipment_db
 
-def get_shipments_from_db(db):
-    return db.query(ShipmentType).all()
+async def get_shipments_from_db(db: AsyncSession):
+    result = await db.execute(select(ShipmentType))
+    return result.scalars().all()
 
-def get_shipment_by_id(db, shipment_id):
-    shipment_db = db.query(ShipmentType).filter(ShipmentType.id == shipment_id).first()
+async def get_shipment_by_id(db: AsyncSession, shipment_id: int):
+    result = await db.execute(select(ShipmentType).filter(ShipmentType.id == shipment_id))
+    shipment_db = result.scalars().first()
     if not shipment_db:
         return None
     return shipment_db
 
-def update_shipment_on_db(db, shipment_db, shipment):
+async def update_shipment_on_db(db: AsyncSession, shipment_db, shipment):
     updated_shipment = shipment.dict(exclude_unset=True)
 
     # Retrieve the existing shipment
-    existing_shipment = db.query(ShipmentType).filter(ShipmentType.id == shipment_db.id).first()
+    existing_shipment = await db.execute(select(ShipmentType).filter(ShipmentType.id == shipment_db.id))
+    existing_shipment = existing_shipment.scalars().first()
 
     if not existing_shipment:
         return None  # Or raise an exception
@@ -33,6 +39,6 @@ def update_shipment_on_db(db, shipment_db, shipment):
     for key, value in updated_shipment.items():
         setattr(existing_shipment, key, value)
 
-    db.commit()
-    db.refresh(existing_shipment)
+    await db.commit()
+    await db.refresh(existing_shipment)
     return existing_shipment

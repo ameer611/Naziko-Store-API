@@ -1,7 +1,7 @@
 from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.api.v1.admin_routes.order_routes import update_order_status
 from app.core.security import get_current_user
@@ -16,15 +16,15 @@ router = APIRouter()
 
 
 @router.get("/all-transactions", response_model=List[TransactionResponse])
-async def get_all_transaction_for_admin(user: dict = Depends(get_current_user), db: Session = Depends(get_db)):
-    user_db = get_user_by_phone(db, user.get("phone_number"))
+async def get_all_transaction_for_admin(user: dict = Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    user_db = await get_user_by_phone(db, user.get("phone_number"))
     if not user_db:
         raise HTTPException(status_code=404, detail="User not found")
 
     if not user_db.is_superuser:
         raise HTTPException(status_code=403, detail="You don't have enough permissions")
 
-    transactions = get_transactions_from_db_for_admin(db)
+    transactions = await get_transactions_from_db_for_admin(db)
     if not transactions:
         return []
 
@@ -35,25 +35,24 @@ async def get_all_transaction_for_admin(user: dict = Depends(get_current_user), 
 async def verify_transaction_endpoint(transaction_id: int,
                                       transaction_amount: float,
                                       user: dict = Depends(get_current_user),
-                                      db: Session = Depends(get_db)):
-    user_db = get_user_by_phone(db, user.get("phone_number"))
+                                      db: AsyncSession = Depends(get_db)):
+    user_db = await get_user_by_phone(db, user.get("phone_number"))
     if not user_db:
         raise HTTPException(status_code=404, detail="User not found")
 
     if not user_db.is_superuser:
         raise HTTPException(status_code=403, detail="You don't have enough permissions")
 
-    transaction = update_transaction_to_valid(db, transaction_id)
+    transaction = await update_transaction_to_valid(db, transaction_id)
     if not transaction:
         raise HTTPException(status_code=404, detail="Transaction not found")
 
-    order_db = get_order_by_id(db, transaction.user_id, transaction.order_id)
+    order_db = await get_order_by_id(db, transaction.user_id, transaction.order_id)
     if not order_db:
         raise HTTPException(status_code=404, detail="Order not found")
     order_db.total_paid += transaction_amount
-    db.commit()
+    await db.commit()
 
     if transaction.user and transaction.user.tg_id:
         send_message_to_customer(transaction.user.tg_id, "Your Transaction is Verified.")
     return transaction
-

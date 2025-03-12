@@ -1,17 +1,31 @@
-# Use an official Python image as a base
-FROM python:3.12
+# Use the official Python image from the Docker Hub
+FROM python:3.12-slim
 
-# Set the working directory in the container
+# Set environment variables to prevent Python from writing .pyc files and to buffer stdout/stderr
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+
+# Set the working directory inside the container
 WORKDIR /app
 
-# Copy the project files to the container
-COPY . /app
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpq-dev \
+    gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install dependencies
+# Copy the requirements file into the container
+COPY requirements.txt /app/
+
+# Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose the port your FastAPI app runs on
-EXPOSE 8080
+# Copy the entire application code into the container
+COPY . /app/
 
-# Command to run the application
-CMD ["uvicorn", "main:main_app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose the port that the FastAPI app will run on
+EXPOSE 8000
+
+# Command to run the FastAPI application
+CMD ["uvicorn", "app.main:main_app", "--host", "0.0.0.0", "--port", "8000"]

@@ -12,7 +12,7 @@ class Order(Base):
 
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('users.id'), nullable=False)
-    status = Column(Enum(OrderStatus), default=OrderStatus.PENDING, nullable=False)
+    status = Column(Enum(OrderStatus, name="order_status"), default=OrderStatus.PENDING, nullable=False)
     created_at = Column(DateTime, default=datetime.now, nullable=False)
     shipment_id = Column(Integer, ForeignKey('shipment_types.id'), nullable=True)
     total_paid = Column(Float, default=0.0, nullable=False)
@@ -30,8 +30,6 @@ class Order(Base):
         return round(sum(item.weight * item.quantity for item in self.order_items), 3)
 
 
-
-
 class OrderItem(Base):
     __tablename__ = 'order_items'
 
@@ -42,7 +40,6 @@ class OrderItem(Base):
     price = Column(Float, nullable=False)
     weight = Column(Float, nullable=False)
     variant = Column(JSON, nullable=True)
-
 
     # Relationship
     order = relationship('Order', back_populates='order_items')

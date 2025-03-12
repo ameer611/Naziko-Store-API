@@ -17,11 +17,11 @@ class Cart(Base):
 
     @hybrid_property
     def total_price(self):
-        return sum(item.price * item.quantity for item in self.cart_items)
+        return round(sum(item.price * item.quantity for item in self.cart_items), 3)
 
     @hybrid_property
     def total_weight(self):
-        return sum(item.weight * item.quantity for item in self.cart_items)
+        return round(sum(item.weight * item.quantity for item in self.cart_items), 0)
 
 
 class CartItem(Base):
@@ -34,5 +34,3 @@ class CartItem(Base):
     price = Column(Float)
     weight = Column(Float)
     variant = Column(JSON, nullable=True)
-
-

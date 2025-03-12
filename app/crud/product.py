@@ -1,41 +1,44 @@
-from sqlalchemy.orm import Session
+from sqlalchemy.ext.asyncio import AsyncSession
+from sqlalchemy.future import select
+from sqlalchemy import text
 
 from app.models import OnlineProduct
 from app.models.product import DatabaseProduct
 
 
-async def refresh_products_on_db(db: Session, products: list):
-    """Refresh the product list on the database."""
-    db.query(DatabaseProduct).delete()
+async def refresh_products_on_db(db: AsyncSession, products: list):
+    await db.execute(text("DELETE FROM products"))
     for product in products:
-        db_product = DatabaseProduct(
-            title=product["title"],
-            price=product["price"],
-            product_link=product["product_link"],
-            image_link=product["image_link"]
+        await db.execute(
+            text("INSERT INTO products (title, price, image_link, product_link) VALUES (:title, :price, :image_link, :product_link)"),
+            {
+                "title": product["title"],
+                "price": product["price"],
+                "image_link": product["image_link"],
+                "product_link": product["product_link"],
+            },
         )
-        db.add(db_product)
-    db.commit()
-    return {"message": "Products list refreshed successfully."}
+    await db.commit()
+    return {"message": "Products refreshed successfully."}
 
 
-def get_product_from_db_if_exists(db: Session, product_link: str):
+async def get_product_from_db_if_exists(db: AsyncSession, product_link: str):
     """Get the product from the database if it exists."""
-    online_product_db =  db.query(OnlineProduct).filter(OnlineProduct.product_link == product_link).first()
-    if not online_product_db:
-        return None
-    return online_product_db
+    result = await db.execute(select(OnlineProduct).filter(OnlineProduct.product_link == product_link))
+    return result.scalars().first()
 
-def update_product_add_variants_to_db_product(db: Session, variants: list, product_link: str):
+
+async def update_product_add_variants_to_db_product(db: AsyncSession, variants: list, product_link: str):
     """Update the product on the database by adding variants."""
-    db_product = get_product_from_db_if_exists(db, product_link)
+    db_product = await get_product_from_db_if_exists(db, product_link)
     if not db_product:
         return None
     db_product.variants = variants
-    db.commit()
+    await db.commit()
     return db_product.variants
 
-def save_product_on_db(db, product_details:dict, product_link:str):
+
+async def save_product_on_db(db: AsyncSession, product_details: dict, product_link: str):
     """Save the product details on the database."""
     db_product = OnlineProduct(
         title=product_details.get("title", ""),
@@ -46,12 +49,11 @@ def save_product_on_db(db, product_details:dict, product_link:str):
         description=product_details.get("descriptions", {})
     )
     db.add(db_product)
-    db.commit()
+    await db.commit()
     return db_product
 
 
-
-def get_products_from_db(db: Session):
+async def get_products_from_db(db: AsyncSession):
     """Get the list of products from the database."""
-    return db.query(DatabaseProduct).all()
-
+    result = await db.execute(select(DatabaseProduct))
+    return result.scalars().all()
