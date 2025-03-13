@@ -17,7 +17,9 @@ load_dotenv()
 
 def get_top_deals_url():
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Optional
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=options)
     driver.get(os.getenv("ALIBABA_URL"))
     driver.implicitly_wait(20)
@@ -29,7 +31,9 @@ def get_top_deals_url():
 
 def change_currency(url, currency="USD"):
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Optional
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")  # Optional
     driver = webdriver.Chrome(options=options)
     driver.get(url)
     driver.implicitly_wait(10)
@@ -75,7 +79,9 @@ def change_currency(url, currency="USD"):
 def get_products_list(page_down_number=2):
     """Returns a list of products from the Top Deals page."""
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -131,7 +137,9 @@ def get_products_list(page_down_number=2):
 def get_product_by_link_from_website(product_link):
     """Get product details by product link from the website"""
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Optional
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")  # Optional
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -209,7 +217,9 @@ def get_product_by_link_from_website(product_link):
 def get_product_variants(product_link):
     """Get product details by product link from the website"""
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # Uncomment if you want to run headless
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")  # Uncomment if you want to run headless
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -258,7 +268,9 @@ def search_product_by_name_from_website(name, minimum_sale=1, page_down_number=1
     """ This function return products which are searched by name on alibaba.com """
     # Driver settings
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -304,7 +316,9 @@ def search_product_by_image_from_website(image_path):
     file_path = os.path.abspath(image_path)
 
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -374,5 +388,7 @@ def get_product_comments(product_link):
     """ Get product reviews from the website """
     # Driver settings
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")
+    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
     # options.add_argument("--disable-gpu")  # Mac
