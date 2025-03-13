@@ -6,7 +6,7 @@ ENV PYTHONDONTWRITEBYTECODE=1
 ENV PYTHONUNBUFFERED=1
 
 # Set the working directory inside the container
-WORKDIR /app
+WORKDIR .
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -16,13 +16,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy the requirements file into the container
-COPY requirements.txt /app/
+COPY requirements.txt .
 
 # Install the dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Copy the entire application code into the container
-COPY . /app/
+COPY . .
 
 # Expose the port that the FastAPI app will run on
 EXPOSE 8000
