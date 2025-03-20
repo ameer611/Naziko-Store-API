@@ -6,8 +6,18 @@ from sqlalchemy.orm import DeclarativeBase
 
 load_dotenv()
 
-# Ensure the DATABASE_URL uses the async driver (e.g., 'postgresql+asyncpg://')
-engine = create_async_engine(os.getenv("DATABASE_URL"), echo=True)
+# Get the DATABASE_URL from the environment
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise Exception("DATABASE_URL environment variable is not set.")
+
+# Heroku provides DATABASE_URL with the scheme "postgres://"
+# For asyncpg, the URL scheme must be "postgresql+asyncpg://"
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql+asyncpg://", 1)
+
+# Create the async engine with the correctly formatted URL
+engine = create_async_engine(DATABASE_URL, echo=True)
 
 # Async Session Factory
 SessionLocal = async_sessionmaker(bind=engine, class_=AsyncSession, expire_on_commit=False)
