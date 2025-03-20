@@ -1,12 +1,14 @@
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
-from app.core.security import get_current_user
+from app.core.security import get_current_user, hash_password
 from app.crud.authentication import get_user_by_phone
 from app.crud.user import (
     change_user_info_on_db, check_passwords, change_user_password_on_db, change_phone_number_on_db
 )
 from app.db.base import get_db
+from app.models import User
 from app.schemas.user import UserResponse, UserUpdate, UserPasswordUpdate, UserPhoneNumberUpdate
 
 router = APIRouter()
@@ -53,3 +55,28 @@ async def change_user_phone(changed_info: UserPhoneNumberUpdate, user=Depends(ge
     if not changed_user:
         return {"message": "User not found"}
     return changed_user
+
+
+@router.post("/add-super-user", response_model=UserResponse, status_code=200)
+async def add_super_admin(user=Depends(get_current_user), db: AsyncSession = Depends(get_db)):
+    if not db:
+        raise HTTPException(status_code=500, detail="Database connection error")
+
+    # Ensure that only an authorized user (for example, an existing superuser) can create a new super admin
+    if not user:
+        raise HTTPException(status_code=403, detail="Not authorized to create a super admin")
+
+    # Check if a user with the same email already exists
+    result = await db.execute(select(User).filter(User.phone_number == user["phone_number"]))
+    existing_user = result.scalars().first()
+    if existing_user:
+        raise HTTPException(status_code=400, detail="Super admin already exists")
+
+    # Create a new User instance for the super admin
+    existing_user.is_superuser = True
+
+    db.add(existing_user)
+    await db.commit()
+    await db.refresh(existing_user)
+
+    return existing_user
