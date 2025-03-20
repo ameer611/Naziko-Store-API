@@ -10,7 +10,6 @@ from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-from app.service.telegram import get_file_link
 
 load_dotenv()
 
@@ -208,7 +207,7 @@ def get_product_by_link_from_website(product_link):
         product_details["descriptions"] = descriptions
 
     except Exception as e:
-        raise Exception("Error getting product details:", e)
+        raise HTTPException(status_code=404, detail=f"Error getting product details: {e}")
     finally:
         driver.quit()
     return product_details
@@ -257,7 +256,7 @@ def get_product_variants(product_link):
             product_variants[variant_name] = variants_elements
 
     except Exception as e:
-        raise Exception("Error getting product variants:") from e
+        raise HTTPException(status_code=404, detail=f"Error getting product variants: {e}")
     finally:
         driver.quit()
 
@@ -371,7 +370,7 @@ def search_product_by_image_from_website(image_path):
             print("Error getting products:", e)
 
     except Exception as e:
-        raise Exception("Error searching product by image:", e)
+        raise HTTPException(status_code=404, detail=f"Error searching product by image: {e}")
     finally:
         driver.quit()
     return products
@@ -384,11 +383,11 @@ def delete_file_from_server(file_path):
     return False
 
 
-def get_product_comments(product_link):
-    """ Get product reviews from the website """
-    # Driver settings
-    options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    # options.add_argument("--disable-gpu")  # Mac
+# def get_product_comments(product_link):
+#     """ Get product reviews from the website """
+#     # Driver settings
+#     options = webdriver.ChromeOptions()
+#     options.add_argument("--headless")  # GUI kerak bo‘lmasa
+#     options.add_argument("--no-sandbox")
+#     options.add_argument("--disable-dev-shm-usage")
+#     # options.add_argument("--disable-gpu")  # Mac

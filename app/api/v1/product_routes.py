@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.alibaba_scraper.products_scraper import (
     get_product_by_link_from_website, get_product_variants,
-    search_product_by_name_from_website, get_product_comments,
+    search_product_by_name_from_website,
     delete_file_from_server, search_product_by_image_from_website
 )
 from app.core.security import get_current_user
