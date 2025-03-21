@@ -69,7 +69,7 @@ async def add_super_admin(user=Depends(get_current_user), db: AsyncSession = Dep
     # Check if a user with the same email already exists
     result = await db.execute(select(User).filter(User.phone_number == user["phone_number"]))
     existing_user = result.scalars().first()
-    if existing_user:
+    if existing_user.is_superuser:
         raise HTTPException(status_code=400, detail="Super admin already exists")
 
     # Create a new User instance for the super admin
