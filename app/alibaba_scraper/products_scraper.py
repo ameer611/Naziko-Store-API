@@ -9,6 +9,7 @@ from selenium.webdriver.common.by import By
 from selenium import webdriver
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+import tempfile
 
 
 load_dotenv()
@@ -16,23 +17,34 @@ load_dotenv()
 
 def get_top_deals_url():
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # GUI kerak bo‘lmasa
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
     driver.get(os.getenv("ALIBABA_URL"))
     driver.implicitly_wait(20)
     top_deals_link = driver.find_element(By.CSS_SELECTOR, "div.saving-spotlight-box")
     top_deals_url = top_deals_link.find_element(By.TAG_NAME, "a").get_attribute("href")
     driver.quit()
+    # Clean up the temporary directory
+    import shutil
+    shutil.rmtree(user_data_dir)
     return top_deals_url
 
 
 def change_currency(url, currency="USD"):
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # GUI kerak bo‘lmasa
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")  # Optional
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
     driver.get(url)
     driver.implicitly_wait(10)
@@ -73,14 +85,22 @@ def change_currency(url, currency="USD"):
         raise HTTPException(status_code=500, detail="Error interacting with the currency element: " + str(e))
     finally:
         driver.quit()
+        # Clean up the temporary directory
+        import shutil
+        shutil.rmtree(user_data_dir)
+
 
 
 def get_products_list(page_down_number=2):
     """Returns a list of products from the Top Deals page."""
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # GUI kerak bo‘lmasa
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -130,15 +150,22 @@ def get_products_list(page_down_number=2):
         raise HTTPException(status_code=404, detail="No products found.")
     finally:
         driver.quit()
+        # Clean up the temporary directory
+        import shutil
+        shutil.rmtree(user_data_dir)
     return product_list
 
 
 def get_product_by_link_from_website(product_link):
     """Get product details by product link from the website"""
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # GUI kerak bo‘lmasa
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")  # Optional
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -210,15 +237,22 @@ def get_product_by_link_from_website(product_link):
         raise HTTPException(status_code=404, detail=f"Error getting product details: {e}")
     finally:
         driver.quit()
+        # Clean up the temporary directory
+        import shutil
+        shutil.rmtree(user_data_dir)
     return product_details
 
 
 def get_product_variants(product_link):
     """Get product details by product link from the website"""
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # GUI kerak bo‘lmasa
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")  # Uncomment if you want to run headless
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -259,6 +293,9 @@ def get_product_variants(product_link):
         raise HTTPException(status_code=404, detail=f"Error getting product variants: {e}")
     finally:
         driver.quit()
+        # Clean up the temporary directory
+        import shutil
+        shutil.rmtree(user_data_dir)
 
     return product_variants
 
@@ -267,9 +304,13 @@ def search_product_by_name_from_website(name, minimum_sale=1, page_down_number=1
     """ This function return products which are searched by name on alibaba.com """
     # Driver settings
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # GUI kerak bo‘lmasa
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -308,6 +349,9 @@ def search_product_by_name_from_website(name, minimum_sale=1, page_down_number=1
         raise HTTPException(status_code=404, detail="No products found.") from e
     finally:
         driver.quit()
+        # Clean up the temporary directory
+        import shutil
+        shutil.rmtree(user_data_dir)
     return products
 
 
@@ -315,9 +359,13 @@ def search_product_by_image_from_website(image_path):
     file_path = os.path.abspath(image_path)
 
     options = webdriver.ChromeOptions()
-    options.add_argument("--headless")  # GUI kerak bo‘lmasa
+    options.add_argument("--headless")
+    options.add_argument("--disable-gpu")
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
+    user_data_dir = tempfile.mkdtemp()
+    options.add_argument(f"--user-data-dir={user_data_dir}")
+
     driver = webdriver.Chrome(options=options)
 
     try:
@@ -373,6 +421,9 @@ def search_product_by_image_from_website(image_path):
         raise HTTPException(status_code=404, detail=f"Error searching product by image: {e}")
     finally:
         driver.quit()
+        # Clean up the temporary directory
+        import shutil
+        shutil.rmtree(user_data_dir)
     return products
 
 
@@ -387,7 +438,8 @@ def delete_file_from_server(file_path):
 #     """ Get product reviews from the website """
 #     # Driver settings
 #     options = webdriver.ChromeOptions()
-#     options.add_argument("--headless")  # GUI kerak bo‘lmasa
+#     options.add_argument("--headless")
+    options.add_argument("--disable-gpu")  # GUI kerak bo‘lmasa
 #     options.add_argument("--no-sandbox")
 #     options.add_argument("--disable-dev-shm-usage")
 #     # options.add_argument("--disable-gpu")  # Mac
